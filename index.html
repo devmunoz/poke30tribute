@@ -1,0 +1,383 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Pokémon Anniversary Tribute</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      min-height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      background: #2c3e50;
+      font-family: 'Courier New', monospace;
+    }
+
+    .gameboy {
+      width: 360px;
+      background: #c8c8c8;
+      border-radius: 12px 12px 60px 12px;
+      padding: 20px;
+      box-shadow: 4px 4px 0 #999, inset -2px -2px 0 #ddd, inset 2px 2px 0 #fff;
+      position: relative;
+    }
+
+    .gameboy-header {
+      text-align: center;
+      font-size: 10px;
+      color: #555;
+      letter-spacing: 2px;
+      margin-bottom: 10px;
+      animation: blink 1.5s infinite;
+    }
+
+    .screen-bezel {
+      background: #4a4a6a;
+      border-radius: 8px;
+      padding: 16px 14px 24px;
+      position: relative;
+    }
+
+    .screen-bezel::before {
+      content: '⬤';
+      position: absolute;
+      top: 6px;
+      left: 12px;
+      font-size: 6px;
+      color: #c0392b;
+    }
+
+    .screen-bezel .power-label {
+      position: absolute;
+      top: 6px;
+      left: 22px;
+      font-size: 7px;
+      color: #888;
+      letter-spacing: 1px;
+    }
+
+    .screen {
+      background: #9bbc0f;
+      border: 3px solid #2a2a2a;
+      border-radius: 4px;
+      min-height: 213px;
+      padding: 12px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      image-rendering: pixelated;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .screen.loading .poke-info { opacity: 0.3; }
+
+    .poke-info { width: 100%; }
+
+    .poke-top {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .poke-sprite {
+      width: 128px;
+      height: 128px;
+      image-rendering: pixelated;
+      filter: drop-shadow(1px 1px 0 #306230);
+      flex-shrink: 0;
+    }
+
+    .poke-identity {
+      display: flex;
+      flex-direction: column;
+      gap: 3px;
+    }
+
+    .poke-name {
+      font-size: 15px;
+      text-transform: uppercase;
+      color: #0f380f;
+      letter-spacing: 2px;
+    }
+
+    .poke-id {
+      font-size: 10px;
+      color: #306230;
+    }
+
+    .poke-types {
+      display: flex;
+      gap: 6px;
+      margin-top: 4px;
+    }
+
+    .type-badge {
+      font-size: 9px;
+      padding: 2px 8px;
+      border-radius: 3px;
+      background: #306230;
+      color: #9bbc0f;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+
+    .poke-bottom {
+      padding-top: 16px;
+    }
+
+    .poke-stats {
+      font-size: 9px;
+      color: #306230;
+      text-align: center;
+      line-height: 1.6;
+    }
+
+    .poke-moves {
+      font-size: 8px;
+      color: #306230;
+      text-align: center;
+      margin-top: 4px;
+      line-height: 1.8;
+    }
+
+    .controls {
+      margin: 16px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    /* D-Pad */
+    .dpad {
+      width: 90px;
+      height: 90px;
+      position: relative;
+    }
+
+    .dpad-btn {
+      position: absolute;
+      background: #2a2a2a;
+      border: none;
+      cursor: pointer;
+      transition: background 0.1s;
+    }
+
+    .dpad-btn:active { background: #111; }
+
+    .dpad-up, .dpad-down {
+      width: 28px;
+      height: 32px;
+      left: 50%;
+      transform: translateX(-50%);
+    }
+
+    .dpad-up { top: 0; border-radius: 4px 4px 0 0; }
+    .dpad-down { bottom: 0; border-radius: 0 0 4px 4px; }
+
+    .dpad-left, .dpad-right {
+      height: 28px;
+      width: 32px;
+      top: 50%;
+      transform: translateY(-50%);
+    }
+
+    .dpad-left { left: 0; border-radius: 4px 0 0 4px; }
+    .dpad-right { right: 0; border-radius: 0 4px 4px 0; }
+
+    .dpad-center {
+      width: 28px;
+      height: 28px;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      background: #2a2a2a;
+      position: absolute;
+    }
+
+    /* A/B Buttons */
+    .ab-buttons {
+      display: flex;
+      gap: 12px;
+      transform: rotate(-25deg);
+    }
+
+    .ab-btn {
+      width: 44px;
+      height: 44px;
+      border-radius: 50%;
+      background: #8b1a4a;
+      border: none;
+      color: #ddd;
+      font-size: 14px;
+      font-weight: bold;
+      cursor: pointer;
+      box-shadow: 2px 2px 0 #5a1030;
+      transition: transform 0.1s;
+      font-family: inherit;
+    }
+
+    .ab-btn:active { transform: scale(0.93); }
+
+    .ab-btn.b-btn { margin-top: 14px; }
+
+    /* Start/Select */
+    .bottom-buttons {
+      display: flex;
+      justify-content: center;
+      gap: 16px;
+      margin-top: 40px;
+    }
+
+    .small-btn {
+      width: 40px;
+      height: 12px;
+      background: #666;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      transform: rotate(-25deg);
+    }
+
+    .small-btn:active { background: #444; }
+
+    .small-label {
+      font-size: 7px;
+      color: #666;
+      text-align: center;
+      margin-top: 4px;
+      letter-spacing: 1px;
+      transform: rotate(-25deg);
+    }
+
+    .footer-text {
+      text-align: center;
+      font-size: 8px;
+      color: #888;
+      margin-top: 40px;
+      letter-spacing: 3px;
+    }
+
+    @keyframes blink {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.4; }
+    }
+
+    .spinner {
+      display: none;
+      font-size: 12px;
+      color: #0f380f;
+      animation: blink 0.6s infinite;
+    }
+
+    .screen.loading .spinner { display: block; }
+    .screen.loading .poke-info { display: none; }
+  </style>
+</head>
+<body>
+  <div class="gameboy">
+    <div class="gameboy-header">★ POK&Eacute;MON TRIBUTE - 30 YEARS ★</div>
+    <div class="screen-bezel">
+      <span class="power-label">POWER</span>
+      <div class="screen" id="screen">
+        <div class="spinner">LOADING...</div>
+        <div class="poke-info" id="pokeInfo">
+          <div class="poke-top">
+            <img class="poke-sprite" id="sprite" alt="Pokémon sprite" src="">
+            <div class="poke-identity">
+              <div class="poke-name" id="name">---</div>
+              <div class="poke-id" id="pokeId">#000</div>
+              <div class="poke-types" id="types"></div>
+            </div>
+          </div>
+          <div class="poke-bottom">
+            <div class="poke-stats" id="stats"></div>
+            <div class="poke-moves" id="moves"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="controls">
+      <div class="dpad">
+        <button class="dpad-btn dpad-up" onclick="fetchRandom()" aria-label="D-pad up"></button>
+        <button class="dpad-btn dpad-down" onclick="fetchRandom()" aria-label="D-pad down"></button>
+        <button class="dpad-btn dpad-left" onclick="fetchRandom()" aria-label="D-pad left"></button>
+        <button class="dpad-btn dpad-right" onclick="fetchRandom()" aria-label="D-pad right"></button>
+        <div class="dpad-center"></div>
+      </div>
+      <div class="ab-buttons">
+        <button class="ab-btn" onclick="fetchRandom()">A</button>
+        <button class="ab-btn b-btn" onclick="fetchRandom()">B</button>
+      </div>
+    </div>
+
+    <div class="bottom-buttons">
+      <div>
+        <button class="small-btn" onclick="fetchRandom()" aria-label="Select"></button>
+        <div class="small-label">SELECT</div>
+      </div>
+      <div>
+        <button class="small-btn" onclick="fetchRandom()" aria-label="Start"></button>
+        <div class="small-label">START</div>
+      </div>
+    </div>
+
+    <div class="footer-text">Gotta Catch 'Em All!</div>
+  </div>
+
+  <script>
+    const screen = document.getElementById('screen');
+    const sprite = document.getElementById('sprite');
+    const nameEl = document.getElementById('name');
+    const idEl = document.getElementById('pokeId');
+    const typesEl = document.getElementById('types');
+    const statsEl = document.getElementById('stats');
+    const movesEl = document.getElementById('moves');
+
+    async function fetchRandom() {
+      const id = Math.floor(Math.random() * 151) + 1;
+      screen.classList.add('loading');
+
+      try {
+        const res = await fetch(`https://pokeapi.co/api/v2/pokemon/${id}`);
+        const data = await res.json();
+
+        sprite.src = data.sprites.front_default || '';
+        sprite.alt = data.name + ' sprite';
+        nameEl.textContent = data.name;
+        idEl.textContent = `#${String(data.id).padStart(3, '0')}`;
+
+        typesEl.innerHTML = data.types
+          .map(t => `<span class="type-badge">${t.type.name}</span>`)
+          .join('');
+
+        const hp = data.stats.find(s => s.stat.name === 'hp').base_stat;
+        const atk = data.stats.find(s => s.stat.name === 'attack').base_stat;
+        const def = data.stats.find(s => s.stat.name === 'defense').base_stat;
+        const spd = data.stats.find(s => s.stat.name === 'speed').base_stat;
+        statsEl.textContent = `HP:${hp}  ATK:${atk}  DEF:${def}  SPD:${spd}`;
+
+        const randomMoves = data.moves
+          .sort(() => 0.5 - Math.random())
+          .slice(0, 4)
+          .map(m => m.move.name.replace(/-/g, ' '));
+        movesEl.innerHTML = randomMoves
+          .map(m => `${m}`)
+          .join('&nbsp;-&nbsp;');
+      } catch (e) {
+        nameEl.textContent = 'ERROR';
+        statsEl.textContent = 'Could not fetch data';
+      }
+
+      screen.classList.remove('loading');
+    }
+
+    fetchRandom();
+  </script>
+</body>
+</html>
